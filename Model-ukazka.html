@@ -1,0 +1,354 @@
+
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#101923">
+<title>DAICH – 3D model stavby</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#101923;color:#edf4f8;font-family:Arial,sans-serif}
+header{padding:15px 17px;background:#142330;border-bottom:1px solid #344657}
+h1{font-size:20px;margin:0 0 5px}
+header p{margin:0;color:#9db2c0;font-size:12px}
+main{padding:14px;max-width:1200px;margin:auto}
+.card{background:#192936;border:1px solid #344657;border-radius:12px;padding:13px;margin-bottom:13px}
+.viewer{height:480px;position:relative;overflow:hidden;border-radius:9px;background:#0b151e}
+#scene{width:100%;height:100%}
+.help{position:absolute;bottom:9px;left:9px;background:#101c28dd;padding:8px;border-radius:6px;font-size:10px;color:#d4e0e8}
+h2{font-size:15px;margin:0 0 12px}
+.controls{display:flex;gap:7px;flex-wrap:wrap}
+button{background:#253b4b;color:#eaf5fa;border:1px solid #456071;border-radius:7px;padding:10px;font-size:11px}
+button.active{background:#17636c;border-color:#49d2df}
+button.primary{background:#37c8d7;color:#09222a;border:0;font-weight:bold}
+.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:9px}
+.info{background:#101d28;border-radius:8px;padding:12px;font-size:12px;line-height:1.7}
+.info strong{color:#4bd2df}
+.warning{font-size:11px;line-height:1.6;color:#f1cc83;background:#3a3020;padding:12px;border-radius:8px}
+.legend{display:flex;flex-wrap:wrap;gap:12px;font-size:11px;color:#c5d5df}
+.legend span{display:flex;align-items:center;gap:5px}
+.dot{width:10px;height:10px;border-radius:50%;display:inline-block}
+@media(max-width:550px){.viewer{height:390px}.grid{grid-template-columns:1fr}main{padding:9px}}
+</style>
+</head>
+<body>
+<header>
+<h1>DAICH <span style="color:#43d2df">3D</span> – Model stavby</h1>
+<p>Rodinný dům · pozemek 125/4 · Dlouhá Lhota u Tábora</p>
+</header>
+<main>
+<div class="card">
+<h2>Prostorový model stavby</h2>
+<div class="viewer"><div id="scene"></div>
+<div class="help">Otáčení: tažením · Přiblížení: dva prsty · Kliknutím vyber objekt</div>
+</div>
+</div>
+
+<div class="card">
+<h2>Viditelnost jednotlivých vrstev</h2>
+<div class="controls">
+<button class="active" data-layer="terrain">Terén a pozemek</button>
+<button class="active" data-layer="buildings">Dům a garáž</button>
+<button class="active" data-layer="roads">Komunikace a dlažba</button>
+<button class="active" data-layer="water">Vodovod</button>
+<button class="active" data-layer="gas">Plyn</button>
+<button class="active" data-layer="electric">Elektro NN</button>
+<button class="active" data-layer="optic">Optika</button>
+<button class="active" data-layer="sewer">Kanalizace</button>
+<button class="active" data-layer="trenches">Výkopy</button>
+<button class="active" data-layer="foundations">Základy</button>
+</div>
+</div>
+
+<div class="card">
+<h2>Legenda sítí</h2>
+<div class="legend">
+<span><i class="dot" style="background:#168dff"></i>Vodovod</span>
+<span><i class="dot" style="background:#f1d32d"></i>Plyn</span>
+<span><i class="dot" style="background:#ed4444"></i>Elektro NN</span>
+<span><i class="dot" style="background:#c64af0"></i>Optika</span>
+<span><i class="dot" style="background:#269a58"></i>Splašková kanalizace</span>
+<span><i class="dot" style="background:#667f9b"></i>Dešťová kanalizace</span>
+</div>
+</div>
+
+<div class="card">
+<h2>Vybraný objekt</h2>
+<div class="info" id="objectInfo">Klikni v modelu na dům, potrubí, výkop nebo jiný objekt. Zobrazí se jeho dostupné parametry.</div>
+</div>
+
+<div class="card">
+<h2>Ovládání pohledu</h2>
+<div class="controls">
+<button class="primary" id="topView">Pohled shora</button>
+<button id="sideView">Boční pohled</button>
+<button id="isoView">Izometrický pohled</button>
+<button id="resetView">Obnovit</button>
+</div>
+</div>
+
+<div class="warning">
+<strong>Technická poznámka:</strong> Toto je demonstrační prostorová rekonstrukce situačního výkresu. Rozmístění a výšky jsou schematické. Rozměry výkopů a objemy jsou převzaté z výkresu. Model není podkladem pro vytyčení sítí ani pro bezpečné provádění výkopů. Před realizací je nutné ověřit polohu sítí u jejich správců a podle skutečného zaměření.
+</div>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+<script>
+(function(){
+"use strict";
+const host=document.getElementById("scene");
+const scene=new THREE.Scene();
+scene.background=new THREE.Color(0x0b151e);
+
+const camera=new THREE.PerspectiveCamera(45,1,0.1,2000);
+camera.position.set(37,33,42);
+
+const renderer=new THREE.WebGLRenderer({antialias:true});
+renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+host.appendChild(renderer.domElement);
+
+const controls=new THREE.OrbitControls(camera,renderer.domElement);
+controls.enableDamping=true;
+controls.dampingFactor=.07;
+controls.target.set(0,0,0);
+
+scene.add(new THREE.HemisphereLight(0xe3f3ff,0x4a5942,2));
+const sun=new THREE.DirectionalLight(0xffffff,2);
+sun.position.set(-25,60,30);
+scene.add(sun);
+
+const groups={};
+["terrain","buildings","roads","water","gas","electric","optic","sewer","trenches","foundations"].forEach(k=>{
+ groups[k]=new THREE.Group();
+ scene.add(groups[k]);
+});
+
+const clickable=[];
+function material(color,opacity=1){
+ return new THREE.MeshStandardMaterial({
+  color,roughness:.9,transparent:opacity<1,opacity,
+  depthWrite:opacity===1,side:THREE.DoubleSide
+ });
+}
+function box(group,name,x,y,z,w,h,d,color,details={}){
+ const mesh=new THREE.Mesh(
+  new THREE.BoxGeometry(w,h,d),material(color,details.opacity||1)
+ );
+ mesh.position.set(x,y,z);
+ mesh.name=name;
+ mesh.userData={name,details};
+ group.add(mesh);
+ clickable.push(mesh);
+ return mesh;
+}
+function line(group,name,points,color,radius,details={}){
+ const curve=new THREE.CatmullRomCurve3(points.map(p=>new THREE.Vector3(...p)));
+ const mesh=new THREE.Mesh(
+  new THREE.TubeGeometry(curve,Math.max(20,points.length*8),radius,8,false),
+  material(color)
+ );
+ mesh.name=name;
+ mesh.userData={name,details};
+ group.add(mesh);
+ clickable.push(mesh);
+ return mesh;
+}
+function sphere(group,x,y,z,r,color){
+ const mesh=new THREE.Mesh(new THREE.SphereGeometry(r,12,10),material(color));
+ mesh.position.set(x,y,z);
+ group.add(mesh);
+ return mesh;
+}
+
+// TERÉN A POZEMEK – schematická rovinná plocha
+box(groups.terrain,"Zahrada a terén",0,-.25,0,35,.5,42,0x86ad67,{
+ "Typ":"Schematický terén",
+ "Výškový systém":"Neověřený",
+ "Zdroj":"Situační výkres"
+});
+
+// Hranice pozemku
+const boundary=[
+ [-15,.04,-19],[15,.04,-19],[15,.04,19],[-15,.04,19],[-15,.04,-19]
+];
+line(groups.terrain,"Hranice pozemku",boundary,0x26352a,.12,{
+ "Typ":"Hranice pozemku",
+ "Pozemek":"125/4"
+});
+
+// DŮM
+box(groups.buildings,"Rodinný dům – obvodové stěny",0,2.2,-3,12,4.4,10,0xc0cbd0,{
+ "Objekt":"Rodinný dům",
+ "Poznámka":"Poloha a rozměry jsou schematické"
+});
+
+// Střecha jako jehlan
+const roofGeometry=new THREE.ConeGeometry(8.4,2.8,4,1);
+const roof=new THREE.Mesh(roofGeometry,material(0x596b78));
+roof.rotation.y=Math.PI/4;
+roof.position.set(0,5.8,-3);
+roof.name="Střecha rodinného domu";
+roof.userData={name:roof.name,details:{"Typ":"Střecha RD"}};
+groups.buildings.add(roof);
+clickable.push(roof);
+
+// Okna a vstup
+box(groups.buildings,"Vstup do rodinného domu",0,1.1,2.05,1.4,2.2,.12,0x243b4a,{
+ "Typ":"Vstup"
+});
+box(groups.buildings,"Okno domu",-3,2.2,2.05,2.1,1.3,.12,0x5a9bb0,{
+ "Typ":"Okno"
+});
+
+// GARÁŽ
+box(groups.buildings,"Garáž", -9,1.6,7,5,3.2,6,0xb9c5c9,{
+ "Objekt":"Garáž",
+ "Výkop":"10 m × 2 m × 1,8 m",
+ "Objem výkopu":"36 m³"
+});
+
+// PŘÍJEZD A KOMUNIKACE
+box(groups.roads,"Příjezdová dlažba",0,.08,9,9,.16,11,0x969da2,{
+ "Typ":"Zpevněná plocha",
+ "Materiál":"Dlažba – podle výkresu"
+});
+box(groups.roads,"Místní komunikace",0,-.05,22,38,.35,7,0x777f85,{
+ "Typ":"Místní komunikace"
+});
+box(groups.roads,"Chodník u domu",0,.09,3.3,8,.18,5,0xa9adb0,{
+ "Typ":"Zpevněná plocha"
+});
+
+// ZÁKLADY
+box(groups.foundations,"Výkop základů RD",0,-1,-3,14,2,12,0xd49b55,{
+ "Délka":"32 m",
+ "Šířka":"2 m",
+ "Hloubka":"2 m",
+ "Objem":"128 m³",
+ "Zdroj":"Zápis o výkopových pracích"
+});
+box(groups.foundations,"Základová konstrukce",0,-.15,-3,10,.65,8,0x737f88,{
+ "Typ":"Základová konstrukce",
+ "Výška":"Podle projektového řešení – nutno ověřit"
+});
+
+// VÝKOPY PŘÍPOJEK
+box(groups.trenches,"Výkop vodovodu",0,-.6,14, .8,1.2,7,0xd3a45a,{Délka:"12 m",Šířka:"0,8 m",Hloubka:"1,2 m",Objem:"11,5 m³"});
+box(groups.trenches,"Výkop kanalizace splaškové",2,-.9,13,1,1.8,8,0xc28a4d,{Délka:"14,5 m",Šířka:"1 m",Hloubka:"1,8 m",Objem:"26,1 m³"});
+box(groups.trenches,"Výkop kanalizace dešťové",4,-.75,13,.8,1.5,7,0xd1a25e,{Délka:"10 m",Šířka:"0,8 m",Hloubka:"1,5 m",Objem:"12 m³"});
+box(groups.trenches,"Výkop plynovodu",6,-.6,14,.6,1.2,6,0xd3a45a,{Délka:"8 m",Šířka:"0,6 m",Hloubka:"1,2 m",Objem:"5,8 m³"});
+box(groups.trenches,"Výkop elektro NN",8,-.5,14,.5,1,7,0xd3a45a,{Délka:"10 m",Šířka:"0,5 m",Hloubka:"1 m",Objem:"5 m³"});
+box(groups.trenches,"Výkop optiky",9.5,-.4,14,.4,.8,7,0xd3a45a,{Délka:"10 m",Šířka:"0,4 m",Hloubka:"0,8 m",Objem:"3,2 m³"});
+
+// PODZEMNÍ VEDENÍ
+const yWater=-.55,ySewer=-1.1,yGas=-.45,yElec=-.3,yOptic=-.2;
+line(groups.water,"Vodovodní přípojka",[[0,yWater,21],[0,yWater,16],[0,yWater,10],[0,yWater,3]],0x168dff,.12,{
+ "Délka":"12 m","Hloubka":"1,2 m","Výkop":"11,5 m³","Typ":"Vodovod"
+});
+line(groups.gas,"Plynovodní přípojka",[[6,yGas,21],[6,yGas,16],[5,yGas,10],[5,yGas,3]],0xf1d32d,.11,{
+ "Délka":"8 m","Hloubka":"1,2 m","Výkop":"5,8 m³","Typ":"Plyn"
+});
+line(groups.electric,"Elektrická přípojka NN",[[8,yElec,21],[8,yElec,16],[7,yElec,10],[7,yElec,3]],0xed4444,.09,{
+ "Délka":"10 m","Hloubka":"1 m","Výkop":"5 m³","Typ":"Elektro NN"
+});
+line(groups.optic,"Optická přípojka",[[9.5,yOptic,21],[9.5,yOptic,16],[8.5,yOptic,10],[8.5,yOptic,3]],0xc64af0,.08,{
+ "Délka":"10 m","Hloubka":"0,8 m","Výkop":"3,2 m³","Typ":"Optika"
+});
+line(groups.sewer,"Splašková kanalizace",[[2,ySewer,21],[2,ySewer,16],[2,ySewer,10],[2,ySewer,3]],0x269a58,.16,{
+ "Délka":"14,5 m","Hloubka":"1,8 m","Výkop":"26,1 m³","Typ":"Splašková kanalizace"
+});
+line(groups.sewer,"Dešťová kanalizace",[[4,ySewer+.15,21],[4,ySewer+.15,16],[4,ySewer+.15,10],[4,ySewer+.15,3]],0x667f9b,.14,{
+ "Délka":"10 m","Hloubka":"1,5 m","Výkop":"12 m³","Typ":"Dešťová kanalizace"
+});
+
+// REVIZNÍ ŠACHTA
+const shaft=new THREE.Mesh(new THREE.CylinderGeometry(.65,.65,1.5,24),material(0x6c8c80));
+shaft.position.set(2,-.3,3);
+shaft.name="Revizní šachta kanalizace";
+shaft.userData={name:shaft.name,details:{"Typ":"Revizní šachta","Poloha":"Schematická"}};
+groups.sewer.add(shaft);
+clickable.push(shaft);
+
+// ZELEŇ – stromy
+for(const [x,z] of [[-13,-14],[12,-13],[-12,12],[12,13],[-7,15]]){
+ const trunk=new THREE.Mesh(new THREE.CylinderGeometry(.15,.2,1.5,8),material(0x755338));
+ trunk.position.set(x,.7,z);
+ groups.terrain.add(trunk);
+ sphere(groups.terrain,x,2,z,1.1,0x397c47);
+}
+
+// INFORMACE
+function showObject(obj){
+ const info=document.getElementById("objectInfo");
+ const d=obj.userData.details||{};
+ let html="<strong>"+(obj.userData.name||obj.name)+"</strong><br>";
+ for(const [key,value] of Object.entries(d)){
+  html+=key+": "+value+"<br>";
+ }
+ html+="<br><span style='color:#9db2c0'>Zdroj: demonstrační rekonstrukce situačního výkresu. Geometrie je orientační.</span>";
+ info.innerHTML=html;
+}
+
+const raycaster=new THREE.Raycaster();
+const pointer=new THREE.Vector2();
+renderer.domElement.addEventListener("click",event=>{
+ const rect=renderer.domElement.getBoundingClientRect();
+ pointer.x=((event.clientX-rect.left)/rect.width)*2-1;
+ pointer.y=-((event.clientY-rect.top)/rect.height)*2+1;
+ raycaster.setFromCamera(pointer,camera);
+ const hits=raycaster.intersectObjects(clickable,true);
+ if(hits.length){
+  let obj=hits[0].object;
+  while(obj&&!obj.userData.name)obj=obj.parent;
+  if(obj)showObject(obj);
+ }
+});
+
+// VRSTVY
+document.querySelectorAll("[data-layer]").forEach(button=>{
+ button.addEventListener("click",()=>{
+  const key=button.dataset.layer;
+  groups[key].visible=!groups[key].visible;
+  button.classList.toggle("active",groups[key].visible);
+ });
+});
+
+// POHLEDY
+function view(x,y,z){
+ camera.position.set(x,y,z);
+ controls.target.set(0,0,0);
+ controls.update();
+}
+document.getElementById("topView").onclick=()=>view(0,65,.01);
+document.getElementById("sideView").onclick=()=>view(0,12,65);
+document.getElementById("isoView").onclick=()=>view(37,33,42);
+document.getElementById("resetView").onclick=()=>view(37,33,42);
+
+// ZÁKLADNÍ ROZMĚRY SCÉNY
+const grid=new THREE.GridHelper(60,30,0x49616b,0x263a45);
+grid.position.y=-.52;
+scene.add(grid);
+
+function resize(){
+ const w=host.clientWidth;
+ const h=host.clientHeight;
+ camera.aspect=w/h;
+ camera.updateProjectionMatrix();
+ renderer.setSize(w,h);
+}
+window.addEventListener("resize",resize);
+resize();
+
+function animate(){
+ requestAnimationFrame(animate);
+ controls.update();
+ renderer.render(scene,camera);
+}
+animate();
+
+})();
+</script>
+</body>
+</html>
