@@ -1,858 +1,445 @@
+
 <!DOCTYPE html>
 <html lang="cs">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="theme-color" content="#060b14">
-<title>DAICH | Construction Command</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#080e18">
+<title>DAICH | Construction Control</title>
 <style>
 :root{
---bg:#060b14;--panel:#102139;--line:rgba(91,190,255,.23);
---cyan:#50e6ff;--blue:#478cff;--green:#53efb1;
---amber:#ffc66b;--red:#ff718b;--muted:#91a8c2;
---text:#eaf6ff;
+ --bg:#080e18;--panel:#101b2a;--panel2:#142338;
+ --line:#263950;--text:#eaf3ff;--muted:#8ca2bb;
+ --cyan:#27d7e8;--blue:#397dff;--green:#39d99a;
+ --orange:#ffad52;--red:#ff647c
 }
 *{box-sizing:border-box}
-body{
-margin:0;color:var(--text);min-height:100vh;
-font-family:Inter,system-ui,Arial,sans-serif;
-background:radial-gradient(ellipse at 50% -20%,#153c65 0%,transparent 48%),#060b14
-}
+body{margin:0;background:var(--bg);color:var(--text);
+ font-family:Arial,sans-serif}
 button,input,select,textarea{font:inherit}
 button{cursor:pointer}
-.app{display:grid;grid-template-columns:245px 1fr;min-height:100vh}
-.sidebar{
-position:sticky;top:0;height:100vh;padding:22px 15px;
-border-right:1px solid var(--line);
-background:rgba(5,12,23,.94);
-display:flex;flex-direction:column;z-index:5
-}
-.brand{display:flex;align-items:center;gap:12px;padding:5px 10px 28px}
-.brand-mark{
-width:44px;height:44px;display:grid;place-items:center;
-border:1px solid var(--cyan);border-radius:12px;
-color:var(--cyan);font-size:25px;font-weight:900;
-box-shadow:0 0 25px #1a9fbd,inset 0 0 15px #17617a;
-transform:perspective(80px) rotateY(-8deg)
-}
-.brand-name{font-size:21px;font-weight:900;letter-spacing:.22em;text-shadow:0 0 20px var(--cyan)}
-.brand-sub{font-size:9px;color:var(--muted);letter-spacing:.18em}
-.nav-label{font-size:9px;color:#617d9c;letter-spacing:.2em;padding:12px}
-.nav{display:grid;gap:7px}
-.nav button{
-padding:13px;border:1px solid transparent;border-radius:11px;
-background:transparent;color:#9bb2cc;text-align:left;
-transition:.2s
-}
-.nav button:hover,.nav button.active{
-color:white;border-color:var(--line);
-background:linear-gradient(100deg,rgba(48,145,219,.23),rgba(76,93,183,.08));
-box-shadow:inset 3px 0 var(--cyan),0 0 20px #102d49
-}
-.nav-icon{display:inline-block;width:27px;color:var(--cyan);font-size:17px}
-.sidebar-bottom{
-margin-top:auto;padding:14px;border:1px solid var(--line);
-border-radius:13px;background:#10243c
-}
-.sidebar-bottom small{color:var(--muted);font-size:10px}
-.status-dot{color:var(--green);margin-right:7px}
-main{min-width:0;padding:25px clamp(14px,3vw,40px) 50px;max-width:1600px;margin:auto;width:100%}
-.topbar{display:flex;align-items:center;justify-content:space-between;gap:15px;margin-bottom:25px}
-.eyebrow{font-size:10px;letter-spacing:.23em;color:var(--cyan)}
-h1{font-size:clamp(25px,4vw,38px);margin:7px 0;font-weight:900;letter-spacing:.04em;text-shadow:0 0 24px #174b68}
-.top-actions{display:flex;align-items:center;gap:12px}
-.clock{font-size:12px;color:#b7cce0;text-align:right}
-.btn{
-border:1px solid rgba(80,230,255,.4);
-background:linear-gradient(135deg,rgba(42,155,210,.22),rgba(57,76,154,.2));
-color:#e9fbff;padding:10px 14px;border-radius:10px
-}
-.btn.primary{background:linear-gradient(110deg,#147da9,#3457bd);border-color:#56ddff}
-.btn.danger{color:#ff9bad;border-color:#a94c62}
-.view{display:none;animation:fade .3s}
+.app{display:flex;min-height:100vh}
+.sidebar{width:245px;background:#0b1421;border-right:1px solid var(--line);
+ padding:22px 14px;flex-shrink:0}
+.logo{font-size:25px;font-weight:900;letter-spacing:3px;
+ color:var(--cyan);padding:8px 12px}
+.logo small{display:block;font-size:9px;color:var(--muted);
+ letter-spacing:4px;margin-top:5px}
+.nav{margin-top:30px}
+.nav button{width:100%;border:0;background:transparent;color:var(--muted);
+ text-align:left;padding:14px 13px;border-radius:9px;margin:3px 0}
+.nav button.active,.nav button:hover{background:#14283d;color:var(--cyan)}
+.nav button span{display:inline-block;width:28px}
+.sidebar-foot{margin:35px 10px;color:var(--muted);font-size:11px}
+main{flex:1;min-width:0;padding:25px;max-width:1600px;margin:auto;width:100%}
+.top{display:flex;justify-content:space-between;align-items:center;
+ gap:15px;margin-bottom:24px}
+h1{font-size:25px;margin:0}
+.sub{color:var(--muted);font-size:12px;margin-top:6px}
+.status{font-size:11px;color:var(--green);border:1px solid #245b4b;
+ padding:8px 12px;border-radius:30px}
+.view{display:none}
 .view.active{display:block}
-@keyframes fade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
-.grid{display:grid;gap:16px}
-.stats{grid-template-columns:repeat(4,minmax(0,1fr));margin-bottom:18px}
-.panel,.stat{
-border:1px solid var(--line);
-background:linear-gradient(145deg,rgba(17,35,58,.94),rgba(8,17,31,.94));
-border-radius:17px;box-shadow:0 18px 45px #0006;
-position:relative;overflow:hidden
-}
-.panel{padding:18px}
-.panel:before,.stat:before{
-content:"";position:absolute;top:0;left:12%;width:45%;height:1px;
-background:linear-gradient(90deg,transparent,var(--cyan),transparent)
-}
-.stat{padding:17px;min-height:110px}
-.stat-label{font-size:10px;color:var(--muted);letter-spacing:.13em}
-.stat-value{font-size:32px;font-weight:900;margin-top:12px;text-shadow:0 0 18px #2b8ba9}
-.stat-foot{font-size:10px;color:#7693b2;margin-top:4px}
-.dashboard-grid{grid-template-columns:minmax(0,1.45fr) minmax(270px,.8fr)}
-.section-head{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:15px}
-.section-head h2{font-size:14px;letter-spacing:.12em;margin:0}
-.section-head p{font-size:11px;color:var(--muted);margin:5px 0 0}
-.holo-scene{
-height:330px;position:relative;overflow:hidden;border-radius:13px;
-background:radial-gradient(ellipse at 50% 78%,#08729a55,transparent 45%),linear-gradient(#0b1e34,#050d1a);
-perspective:800px
-}
-.scene-grid{
-position:absolute;left:-15%;right:-15%;bottom:-32%;height:75%;
-transform:rotateX(65deg);
-background-image:linear-gradient(#48b9ff3d 1px,transparent 1px),linear-gradient(90deg,#48b9ff3d 1px,transparent 1px);
-background-size:34px 34px
-}
-.scene-orb{
-position:absolute;width:240px;height:240px;left:50%;top:46%;
-transform:translate(-50%,-50%) rotateX(70deg);
-border:1px solid #50e6ff55;border-radius:50%;
-box-shadow:0 0 35px #50e6ff22,inset 0 0 35px #50e6ff22
-}
-.scene-orb:before,.scene-orb:after{
-content:"";position:absolute;inset:20px;border:1px dashed #50e6ff55;border-radius:50%
-}
-.scene-orb:after{inset:48px;border-style:solid}
-.building{
-position:absolute;left:50%;top:52%;
-transform:translate(-50%,-50%) rotateY(-18deg);
-width:220px;height:138px;filter:drop-shadow(0 0 16px #35caff77)
-}
-.roof{
-position:absolute;left:0;top:0;width:220px;height:35px;
-background:linear-gradient(135deg,#267eae,#122d59);
-clip-path:polygon(14% 0,100% 0,86% 100%,0 100%)
-}
-.front{
-position:absolute;left:20px;top:34px;width:178px;height:100px;
-background:linear-gradient(135deg,#1b6899,#091e3e);
-border:1px solid var(--cyan);box-shadow:inset 0 0 28px #42d0ff33
-}
-.side{
-position:absolute;right:-15px;top:35px;width:16px;height:100px;
-background:linear-gradient(#194a77,#07172e);transform:skewY(40deg)
-}
-.windows{position:absolute;inset:16px 12px;display:grid;grid-template-columns:repeat(4,1fr);gap:9px}
-.windows i{background:linear-gradient(135deg,#b2f7ff,#248bc8);box-shadow:0 0 12px #32caff;animation:pulse 3s infinite alternate}
-@keyframes pulse{to{opacity:.35;filter:hue-rotate(25deg)}}
-.crane{position:absolute;left:24%;top:15%;width:2px;height:150px;background:linear-gradient(#8df4ff,#2384b8);box-shadow:0 0 9px #36cfff}
-.crane:before{content:"";position:absolute;top:0;width:150px;height:3px;background:#70eaff;box-shadow:0 0 12px #36cfff}
-.crane:after{content:"";position:absolute;top:0;left:105px;width:1px;height:75px;background:#70eaff}
-.crane-cab{position:absolute;top:3px;left:5px;width:18px;height:14px;border:1px solid #80efff;background:#174e7b}
-.scene-label{position:absolute;font-size:9px;letter-spacing:.16em;color:#8ceeff}
-.scene-label.one{top:13px;left:15px}
-.scene-label.two{right:15px;bottom:18px}
-.scene-scan{
-position:absolute;left:0;right:0;height:1px;top:30%;
-background:linear-gradient(90deg,transparent,#50e6ff,transparent);
-animation:scan 5s linear infinite
-}
-@keyframes scan{0%{top:15%;opacity:0}20%{opacity:1}100%{top:90%;opacity:0}}
-.scene-caption{position:absolute;left:16px;bottom:15px;color:#779bb9;font-size:9px}
-.side-stack{display:grid;gap:16px}
-.metric-row{display:flex;justify-content:space-between;padding:12px 0;border-bottom:1px solid #71a4cd22;font-size:12px}
-.metric-row span{color:#9ab2ca}
-.metric-row strong{font-size:16px}
-.activity{display:grid;gap:12px}
-.activity-item{display:flex;gap:11px;font-size:12px}
-.activity-mark{width:8px;height:8px;border-radius:50%;background:var(--cyan);box-shadow:0 0 10px var(--cyan);margin-top:4px}
-.activity-item small{display:block;color:var(--muted);margin-top:4px}
-.toolbar{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:16px}
-.toolbar h2{margin:0;font-size:20px}
-.toolbar p{margin:5px 0;color:var(--muted);font-size:12px}
-table{width:100%;border-collapse:collapse;min-width:550px}
-.table-wrap{overflow:auto}
-th{text-align:left;font-size:9px;letter-spacing:.15em;color:#7896b5;padding:12px 10px;border-bottom:1px solid var(--line)}
-td{padding:13px 10px;border-bottom:1px solid #71a4cd19;font-size:12px}
-.muted{color:var(--muted)}
-.pill{display:inline-block;border:1px solid #50e6ff44;background:#3196c61a;color:#a9edff;border-radius:30px;padding:5px 9px;font-size:10px}
-.pill.green{color:var(--green);border-color:#53efb144}
-.pill.amber{color:var(--amber);border-color:#ffc66b44}
-.actions{display:flex;gap:6px}
-.icon-btn{width:30px;height:30px;border-radius:8px;border:1px solid var(--line);background:#19385380;color:#bfeeff}
-.material-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
-.material-card{padding:17px;border:1px solid var(--line);border-radius:15px;background:linear-gradient(145deg,#10243c,#081321);box-shadow:0 15px 35px #0005}
-.material-top{display:flex;justify-content:space-between;gap:10px}
-.material-name{font-weight:800;font-size:14px}
-.material-meta{font-size:10px;color:var(--muted);margin-top:5px}
-.quantity-control{display:flex;align-items:center;gap:10px;margin-top:17px}
-.qty-btn{width:40px;height:40px;border-radius:11px;border:1px solid #50e6ff66;background:#1b63804d;color:#baf7ff;font-size:23px}
-.qty-value{font-size:27px;font-weight:900;min-width:55px;text-align:center}
-.qty-unit{font-size:11px;color:var(--muted)}
-.qty-hint{font-size:9px;color:#6888a8;margin-left:auto}
-.calendar-layout{display:grid;grid-template-columns:280px 1fr;gap:16px}
-.day-plan{display:grid;gap:10px}
-.plan-item{border:1px solid #50e6ff33;background:#0d1e32;border-radius:12px;padding:13px}
-.plan-item small{display:block;color:var(--muted);margin-top:5px}
-.empty{padding:28px;text-align:center;color:#7895b2;font-size:12px;border:1px dashed #71a6cd44;border-radius:12px}
-.modal-backdrop{position:fixed;inset:0;background:#01050ccc;backdrop-filter:blur(8px);display:none;align-items:center;justify-content:center;padding:16px;z-index:20}
-.modal-backdrop.open{display:flex}
-.modal{width:min(520px,100%);max-height:90vh;overflow:auto;border:1px solid #50e6ff66;border-radius:18px;background:linear-gradient(145deg,#10243c,#081321);padding:20px;box-shadow:0 25px 90px #000b}
-.modal-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px}
-.modal-head h3{font-size:17px}
+.grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:13px}
+.card{background:linear-gradient(145deg,var(--panel),#0c1725);
+ border:1px solid var(--line);border-radius:13px;padding:17px}
+.stat-label{color:var(--muted);font-size:12px}
+.stat{font-size:29px;font-weight:800;margin-top:12px}
+.stat-note{font-size:11px;color:var(--cyan);margin-top:5px}
+.section-title{display:flex;align-items:center;justify-content:space-between;
+ gap:12px;margin:25px 0 13px}
+.section-title h2{font-size:17px;margin:0}
+.btn{background:var(--cyan);color:#07131c;border:0;border-radius:8px;
+ padding:10px 14px;font-weight:700}
+.btn.secondary{background:#1c3048;color:var(--text);border:1px solid var(--line)}
+.btn.danger{background:#542335;color:#fff}
+.btn.small{padding:7px 10px;font-size:12px}
+.scene{height:300px;position:relative;overflow:hidden;border:1px solid #23516a;
+ border-radius:15px;background:radial-gradient(ellipse at 50% 40%,#183d58,#0b1728 65%,#080e18)}
+.scene:before{content:"";position:absolute;inset:0;
+ background-image:linear-gradient(#42d9ed20 1px,transparent 1px),
+ linear-gradient(90deg,#42d9ed20 1px,transparent 1px);
+ background-size:32px 32px;transform:perspective(350px) rotateX(55deg) scale(1.7);
+ transform-origin:center 75%;top:30px}
+.scene-label{position:absolute;top:17px;left:18px;font-size:11px;
+ color:var(--cyan);letter-spacing:2px}
+.earth{position:absolute;width:70%;height:95px;left:15%;bottom:35px;
+ border:2px solid #27d7e8aa;border-radius:50%;
+ transform:perspective(250px) rotateX(55deg);
+ box-shadow:0 0 25px #27d7e855}
+.pipe{position:absolute;width:60%;height:18px;left:20%;top:55%;
+ border:2px solid var(--cyan);border-radius:20px;
+ transform:rotate(-12deg);box-shadow:0 0 18px #27d7e8}
+.machine{position:absolute;left:42%;top:24%;font-size:70px;
+ filter:drop-shadow(0 0 12px #27d7e8);animation:float 4s ease-in-out infinite}
+@keyframes float{50%{transform:translateY(-9px)}}
+.scene-info{position:absolute;right:16px;bottom:15px;font-size:11px;
+ color:#b7dce9;text-align:right}
+.columns{display:grid;grid-template-columns:1.4fr 1fr;gap:14px}
+.list{display:flex;flex-direction:column;gap:9px}
+.item{background:#101c2b;border:1px solid var(--line);border-radius:10px;
+ padding:13px;display:flex;align-items:center;gap:12px}
+.item-main{flex:1;min-width:0}
+.item-main strong{font-size:13px}
+.item-main small{display:block;color:var(--muted);margin-top:5px;font-size:11px}
+.tag{font-size:10px;padding:5px 8px;border-radius:20px;
+ background:#173b43;color:var(--cyan);white-space:nowrap}
+.tag.orange{background:#45301c;color:var(--orange)}
+.tag.green{background:#153b31;color:var(--green)}
+.tag.red{background:#482331;color:var(--red)}
+.empty{padding:30px;text-align:center;color:var(--muted);font-size:13px}
+.toolbar{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:15px}
+input,select,textarea{width:100%;background:#0b1725;color:var(--text);
+ border:1px solid var(--line);border-radius:8px;padding:11px}
+textarea{min-height:85px;resize:vertical}
+label{display:block;color:var(--muted);font-size:11px;margin-bottom:6px}
+.field{margin-bottom:13px}
 .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-.field{display:grid;gap:6px}
-.field.full{grid-column:1/-1}
-.field label{font-size:10px;color:#91acc7}
-.field input,.field select,.field textarea{
-width:100%;padding:11px;border-radius:9px;border:1px solid #67a4d044;
-background:#071321;color:#eaf6ff;outline:none
-}
-.field textarea{min-height:78px}
-.modal-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:18px}
+.modal{display:none;position:fixed;inset:0;background:#000b;z-index:10;
+ align-items:center;justify-content:center;padding:15px}
+.modal.open{display:flex}
+.modal-box{width:100%;max-width:510px;max-height:90vh;overflow:auto;
+ background:#101b2a;border:1px solid var(--line);border-radius:14px;padding:20px}
+.modal-head{display:flex;justify-content:space-between;align-items:center;
+ margin-bottom:20px}
+.modal-head h2{font-size:19px;margin:0}
+.close{background:none;color:var(--muted);border:0;font-size:25px}
+.actions{display:flex;gap:7px;align-items:center}
+.qty{display:flex;align-items:center;gap:10px}
+.qty button{background:#203950;color:var(--cyan);border:0;
+ width:30px;height:30px;border-radius:7px;font-size:18px}
+.check{width:19px;height:19px;accent-color:var(--green)}
+.progress{height:6px;background:#23354a;border-radius:10px;margin-top:10px}
+.progress div{height:100%;background:var(--cyan);border-radius:10px}
 .mobile-nav{display:none}
-footer{text-align:center;color:#536f8d;font-size:10px;margin-top:25px}
+footer{text-align:center;color:#50647b;font-size:10px;padding:30px}
 @media(max-width:900px){
-.app{grid-template-columns:75px 1fr}
-.sidebar{padding:18px 8px}
-.brand{justify-content:center;padding:4px 0 25px}
-.brand-copy,.nav-label,.nav-text,.sidebar-bottom{display:none}
-.nav button{text-align:center;padding:13px 4px}
-.nav-icon{width:auto}
-.stats{grid-template-columns:repeat(2,1fr)}
-.dashboard-grid{grid-template-columns:1fr}
+ .sidebar{width:190px}.grid{grid-template-columns:repeat(2,1fr)}
+ .columns{grid-template-columns:1fr}
 }
-@media(max-width:620px){
-.app{display:block;padding-bottom:70px}
-.sidebar{display:none}
-main{padding:17px 13px 35px}
-.clock{display:none}
-.stats{gap:9px}
-.stat{min-height:90px;padding:13px}
-.stat-value{font-size:26px}
-.dashboard-grid,.calendar-layout,.material-grid{grid-template-columns:1fr}
-.holo-scene{height:270px}
-.form-grid{grid-template-columns:1fr}
-.field.full{grid-column:auto}
-.mobile-nav{
-display:flex;position:fixed;bottom:0;left:0;right:0;z-index:10;
-background:#050d18f2;backdrop-filter:blur(18px);
-border-top:1px solid var(--line);justify-content:space-around;padding:8px 4px
-}
-.mobile-nav button{border:0;background:transparent;color:#829db8;display:grid;gap:3px;justify-items:center;font-size:9px}
-.mobile-nav button.active{color:var(--cyan)}
-.mobile-nav b{font-size:17px;font-weight:400}
-.toolbar{align-items:flex-start}
-.toolbar .search{width:100%}
+@media(max-width:600px){
+ .app{display:block}.sidebar{display:none}main{padding:17px 13px 85px}
+ .top{align-items:flex-start}.status{font-size:9px}
+ h1{font-size:21px}.grid{gap:8px}.card{padding:13px}
+ .stat{font-size:24px}.scene{height:235px}
+ .mobile-nav{display:flex;position:fixed;bottom:0;left:0;right:0;
+ background:#0b1421;border-top:1px solid var(--line);z-index:5;
+ overflow-x:auto;padding:7px 3px}
+ .mobile-nav button{flex:1;min-width:65px;background:none;border:0;
+ color:var(--muted);font-size:9px;padding:7px 2px}
+ .mobile-nav button span{display:block;font-size:19px;margin-bottom:4px}
+ .mobile-nav button.active{color:var(--cyan)}
+ .form-grid{grid-template-columns:1fr}
 }
 </style>
 </head>
 <body>
 <div class="app">
 <aside class="sidebar">
- <div class="brand">
-  <div class="brand-mark">D</div>
-  <div class="brand-copy">
-   <div class="brand-name">DAICH</div>
-   <div class="brand-sub">CONSTRUCTION COMMAND</div>
-  </div>
- </div>
- <div class="nav-label">ŘÍDICÍ SYSTÉM</div>
- <nav class="nav">
-  <button class="active" data-view="home"><span class="nav-icon">⌘</span><span class="nav-text">Přehled</span></button>
-  <button data-view="calendar"><span class="nav-icon">▦</span><span class="nav-text">Kalendář</span></button>
-  <button data-view="projects"><span class="nav-icon">◇</span><span class="nav-text">Stavby</span></button>
-  <button data-view="workers"><span class="nav-icon">◎</span><span class="nav-text">Pracovníci</span></button>
-  <button data-view="tasks"><span class="nav-icon">☷</span><span class="nav-text">Úkoly</span></button>
-  <button data-view="materials"><span class="nav-icon">▤</span><span class="nav-text">Materiál</span></button>
- </nav>
- <div class="sidebar-bottom"><span class="status-dot">●</span><small>SYSTÉM PŘIPRAVEN<br>LOKÁLNÍ PROTOTYP</small></div>
+ <div class="logo">DAICH<small>CONSTRUCTION CONTROL</small></div>
+ <div class="nav" id="sideNav"></div>
+ <div class="sidebar-foot">DAICH 2.0<br>Řízení stavebních prací</div>
 </aside>
-
 <main>
-<header class="topbar">
- <div>
-  <div class="eyebrow">DAICH / CONSTRUCTION INTELLIGENCE</div>
-  <h1 id="pageTitle">ŘÍDICÍ CENTRUM</h1>
+ <div class="top">
+  <div><h1 id="pageTitle">Přehled firmy</h1>
+   <div class="sub" id="pageSub">Řídicí centrum stavebních prací</div></div>
+  <div class="status">● SYSTÉM PŘIPRAVEN</div>
  </div>
- <div class="top-actions">
-  <div class="clock" id="clock"></div>
-  <button class="btn primary" id="quickAdd">＋ Přidat záznam</button>
- </div>
-</header>
 
-<section class="view active" id="view-home">
- <div class="grid stats">
-  <div class="stat"><div class="stat-label">Aktivní stavby</div><div class="stat-value" id="statProjects">0</div><div class="stat-foot">EVIDOVANÉ PROJEKTY</div></div>
-  <div class="stat"><div class="stat-label">Pracovníci</div><div class="stat-value" id="statWorkers">0</div><div class="stat-foot">V EVIDENCI</div></div>
-  <div class="stat"><div class="stat-label">Otevřené úkoly</div><div class="stat-value" id="statTasks">0</div><div class="stat-foot">ČEKAJÍ NA SPLNĚNÍ</div></div>
-  <div class="stat"><div class="stat-label">Položky skladu</div><div class="stat-value" id="statMaterials">0</div><div class="stat-foot">TYPŮ MATERIÁLU</div></div>
- </div>
- <div class="grid dashboard-grid">
-  <div class="panel">
-   <div class="section-head"><div><h2>Prostorová projekce</h2><p>VIRTUÁLNÍ STAVEBNÍ SEKTOR / 3D HOLOGRAM</p></div><span class="pill green">● ONLINE</span></div>
-   <div class="holo-scene">
-    <div class="scene-grid"></div><div class="scene-orb"></div><div class="scene-scan"></div>
-    <div class="crane"><div class="crane-cab"></div></div>
-    <div class="building"><div class="roof"></div><div class="front"><div class="windows"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div></div><div class="side"></div></div>
-    <div class="scene-label one">DAICH // HOLO-SITE 01</div>
-    <div class="scene-label two">RENDER ENGINE · ACTIVE</div>
-    <div class="scene-caption">DIGITÁLNÍ MODEL / ILUSTRAČNÍ VIZUALIZACE</div>
+ <section class="view active" id="dashboard">
+  <div class="scene">
+   <div class="scene-label">DAICH / DIGITAL SITE</div>
+   <div class="earth"></div><div class="pipe"></div>
+   <div class="machine">🚜</div>
+   <div class="scene-info">3D STAVENIŠTĚ<br>VIZUALIZACE PROSTORU</div>
+  </div>
+  <div class="section-title"><h2>Provozní přehled</h2></div>
+  <div class="grid">
+   <div class="card"><div class="stat-label">Aktivní zakázky</div>
+    <div class="stat" id="sProjects">0</div><div class="stat-note">Evidované stavby</div></div>
+   <div class="card"><div class="stat-label">Zaměstnanci</div>
+    <div class="stat" id="sWorkers">0</div><div class="stat-note">V evidenci</div></div>
+   <div class="card"><div class="stat-label">Otevřené úkoly</div>
+    <div class="stat" id="sTasks">0</div><div class="stat-note">Čekají na dokončení</div></div>
+   <div class="card"><div class="stat-label">Stroje</div>
+    <div class="stat" id="sMachines">0</div><div class="stat-note">V evidenci</div></div>
+  </div>
+  <div class="columns">
+   <div>
+    <div class="section-title"><h2>Aktuální zakázky</h2>
+     <button class="btn small" onclick="navigate('projects')">Všechny</button></div>
+    <div id="dashProjects" class="list"></div>
+   </div>
+   <div>
+    <div class="section-title"><h2>Nejbližší úkoly</h2>
+     <button class="btn small secondary" onclick="navigate('tasks')">Všechny</button></div>
+    <div id="dashTasks" class="list"></div>
    </div>
   </div>
-  <div class="side-stack">
-   <div class="panel">
-    <div class="section-head"><div><h2>Provozní stav</h2><p>AKTUÁLNÍ PŘEHLED EVIDENCE</p></div></div>
-    <div class="metric-row"><span>Plánované práce dnes</span><strong id="todayPlans">0</strong></div>
-    <div class="metric-row"><span>Dokončené úkoly</span><strong id="doneTasks">0</strong></div>
-    <div class="metric-row"><span>Materiálové položky</span><strong id="materialCount">0</strong></div>
-   </div>
-   <div class="panel">
-    <div class="section-head"><div><h2>Poslední záznamy</h2><p>AKTIVITA V TOMTO ZAŘÍZENÍ</p></div></div>
-    <div class="activity" id="activity"><div class="empty">Zatím zde nejsou žádné záznamy.</div></div>
-   </div>
+ </section>
+
+ <section class="view" id="projects">
+  <div class="section-title"><h2>Zakázky a stavby</h2>
+   <button class="btn" onclick="openForm('project')">+ Nová zakázka</button></div>
+  <div id="projectList" class="list"></div>
+ </section>
+
+ <section class="view" id="tasks">
+  <div class="section-title"><h2>Pracovní úkoly</h2>
+   <button class="btn" onclick="openForm('task')">+ Nový úkol</button></div>
+  <div class="toolbar"><select id="taskFilter" onchange="render()">
+   <option value="all">Všechny úkoly</option>
+   <option value="open">Nedokončené</option>
+   <option value="done">Dokončené</option></select></div>
+  <div id="taskList" class="list"></div>
+ </section>
+
+ <section class="view" id="workers">
+  <div class="section-title"><h2>Zaměstnanci</h2>
+   <button class="btn" onclick="openForm('worker')">+ Přidat osobu</button></div>
+  <div id="workerList" class="list"></div>
+ </section>
+
+ <section class="view" id="materials">
+  <div class="section-title"><h2>Materiál na stavbách</h2>
+   <button class="btn" onclick="openForm('material')">+ Přidat materiál</button></div>
+  <div id="materialList" class="list"></div>
+ </section>
+
+ <section class="view" id="machines">
+  <div class="section-title"><h2>Mechanizace a vozidla</h2>
+   <button class="btn" onclick="openForm('machine')">+ Přidat stroj</button></div>
+  <div id="machineList" class="list"></div>
+ </section>
+
+ <section class="view" id="planning">
+  <div class="section-title"><h2>Plánování práce</h2>
+   <button class="btn" onclick="openForm('task')">+ Naplánovat úkol</button></div>
+  <div id="planningList" class="list"></div>
+ </section>
+
+ <section class="view" id="documents">
+  <div class="section-title"><h2>Projektová dokumentace</h2></div>
+  <div class="card">
+   <h3>3D projekt stavby</h3>
+   <p class="sub">Zde bude možné nahrávat projektové výkresy a vytvářet z nich prostorové modely.</p>
+   <div class="field"><label>Vyber projektovou dokumentaci</label>
+    <input type="file" id="projectFile" accept=".pdf,.dwg,.dxf,.ifc,.xml,.jpg,.jpeg,.png" multiple></div>
+   <button class="btn" onclick="uploadInfo()">Připravit dokumentaci</button>
+   <div id="fileInfo" class="sub" style="margin-top:12px"></div>
+   <p class="sub">Poznámka: samotné nahrání souboru zatím nezajišťuje jeho automatický převod do 3D. Ten doplníme samostatným technickým modulem.</p>
   </div>
- </div>
-</section>
+ </section>
 
-<section class="view" id="view-calendar">
- <div class="toolbar"><div><h2>Kalendář prací</h2><p>Plánování lidí, činností a míst realizace.</p></div><button class="btn primary" data-add="plan">＋ Naplánovat práci</button></div>
- <div class="calendar-layout">
-  <div class="panel"><div class="section-head"><h2>Vybraný den</h2></div><div class="field"><label>DATUM</label><input type="date" id="selectedDate"></div><p class="muted">Vyber datum a zobraz plánované práce pro konkrétní den.</p></div>
-  <div class="panel"><div class="section-head"><div><h2>Denní plán</h2><p id="dayLabel">PLÁN PRO VYBRANÝ DEN</p></div><span class="pill" id="planCount">0 položek</span></div><div class="day-plan" id="dayPlans"></div></div>
- </div>
-</section>
-
-<section class="view" id="view-projects">
- <div class="toolbar"><div><h2>Stavby a projekty</h2><p>Evidence míst, kde probíhají práce.</p></div><button class="btn primary" data-add="project">＋ Přidat stavbu</button></div>
- <div class="panel"><div class="table-wrap"><table><thead><tr><th>Název stavby</th><th>Adresa / místo</th><th>Popis</th><th>Akce</th></tr></thead><tbody id="projectsBody"></tbody></table></div></div>
-</section>
-
-<section class="view" id="view-workers">
- <div class="toolbar"><div><h2>Pracovníci</h2><p>Kontakty a přehled pracovního týmu.</p></div><button class="btn primary" data-add="worker">＋ Přidat pracovníka</button></div>
- <div class="panel"><div class="table-wrap"><table><thead><tr><th>Jméno</th><th>Telefon</th><th>Poznámka</th><th>Akce</th></tr></thead><tbody id="workersBody"></tbody></table></div></div>
-</section>
-
-<section class="view" id="view-tasks">
- <div class="toolbar"><div><h2>Úkoly a požadavky</h2><p>Co je potřeba zařídit a do kdy.</p></div><button class="btn primary" data-add="task">＋ Přidat úkol</button></div>
- <div class="panel"><div class="table-wrap"><table><thead><tr><th>Úkol</th><th>Termín</th><th>Detail</th><th>Stav</th><th>Akce</th></tr></thead><tbody id="tasksBody"></tbody></table></div></div>
-</section>
-
-<section class="view" id="view-materials">
- <div class="toolbar"><div><h2>Materiál a sklad</h2><p>Množství upravíš jedním klepnutím na + nebo −.</p></div><button class="btn primary" data-add="material">＋ Přidat materiál</button></div>
- <div class="grid material-grid" id="materialsGrid"></div>
-</section>
-
-<footer>DAICH CONSTRUCTION COMMAND · LOKÁLNÍ PROTOTYP</footer>
+ <section class="view" id="reports">
+  <div class="section-title"><h2>Výkazy a přehledy</h2></div>
+  <div class="grid">
+   <div class="card"><div class="stat-label">Všechny úkoly</div><div class="stat" id="rTasks">0</div></div>
+   <div class="card"><div class="stat-label">Dokončené úkoly</div><div class="stat" id="rDone">0</div></div>
+   <div class="card"><div class="stat-label">Položky skladu</div><div class="stat" id="rMaterials">0</div></div>
+   <div class="card"><div class="stat-label">Stroje</div><div class="stat" id="rMachines">0</div></div>
+  </div>
+ </section>
+ <footer>DAICH 2.0 · CONSTRUCTION CONTROL · PROTOTYP</footer>
 </main>
 </div>
 
-<nav class="mobile-nav">
- <button class="active" data-view="home"><b>⌘</b>Přehled</button>
- <button data-view="calendar"><b>▦</b>Kalendář</button>
- <button data-view="projects"><b>◇</b>Stavby</button>
- <button data-view="tasks"><b>☷</b>Úkoly</button>
- <button data-view="materials"><b>▤</b>Materiál</button>
-</nav>
+<div class="mobile-nav" id="mobileNav"></div>
 
-<div class="modal-backdrop" id="modalBackdrop">
- <div class="modal">
-  <div class="modal-head"><h3 id="modalTitle">NOVÝ ZÁZNAM</h3><button class="icon-btn" id="closeModal">✕</button></div>
-  <form id="recordForm">
-   <div class="form-grid" id="formFields"></div>
-   <div class="modal-actions"><button type="button" class="btn" id="cancelModal">Zrušit</button><button class="btn primary" type="submit">Uložit záznam</button></div>
+<div class="modal" id="modal">
+ <div class="modal-box">
+  <div class="modal-head"><h2 id="modalTitle">Nový záznam</h2>
+   <button class="close" onclick="closeForm()">×</button></div>
+  <form id="recordForm" onsubmit="saveRecord(event)">
+   <div id="formFields"></div>
+   <div class="actions">
+    <button class="btn" type="submit">Uložit</button>
+    <button class="btn secondary" type="button" onclick="closeForm()">Zrušit</button>
+   </div>
   </form>
  </div>
-   </div>
-   <script>
-(function(){
-'use strict';
+</div>
 
-const KEY='daich_prototype_v1';
-const today=()=>new Date().toISOString().slice(0,10);
-const blank=()=>({
- projects:[],workers:[],tasks:[],materials:[],plans:[],activity:[]
-});
+<script>
+const menu=[
+ ['dashboard','⌂','Přehled'],
+ ['projects','▦','Zakázky'],
+ ['planning','▤','Plánování'],
+ ['tasks','☑','Úkoly'],
+ ['workers','♙','Zaměstnanci'],
+ ['machines','⚙','Stroje'],
+ ['materials','▣','Materiál'],
+ ['documents','◈','3D projekty'],
+ ['reports','▥','Výkazy']
+];
+let data=JSON.parse(localStorage.getItem('daich_v2_data')||'null')||{
+ projects:[],tasks:[],workers:[],machines:[],materials:[]
+};
+let editing=null;
 
-let data;
-try{
- data=JSON.parse(localStorage.getItem(KEY))||blank();
-}catch(e){data=blank()}
-
-for(const k of Object.keys(blank())){
- if(!Array.isArray(data[k]))data[k]=[];
-}
-
-let currentType='',editingId=null;
-const $=id=>document.getElementById(id);
-
-const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({
- '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
-}[c]));
-
-const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
-
-function save(){
- localStorage.setItem(KEY,JSON.stringify(data));
+function persist(){
+ localStorage.setItem('daich_v2_data',JSON.stringify(data));
  render();
 }
-
-function log(msg){
- data.activity.unshift({
-  id:uid(),
-  msg,
-  time:new Date().toLocaleString('cs-CZ',{
-   day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'
-  })
- });
- data.activity=data.activity.slice(0,6);
+function navigate(id){
+ document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+ document.getElementById(id).classList.add('active');
+ document.querySelectorAll('[data-page]').forEach(b=>
+  b.classList.toggle('active',b.dataset.page===id));
+ const item=menu.find(m=>m[0]===id);
+ document.getElementById('pageTitle').textContent=item?item[2]:'DAICH';
+ document.getElementById('pageSub').textContent=
+  'Řízení zemních a inženýrských prací';
 }
+function buildNav(){
+ const html=menu.map(m=>`<button data-page="${m[0]}" onclick="navigate('${m[0]}')"><span>${m[1]}</span>${m[2]}</button>`).join('');
+ document.getElementById('sideNav').innerHTML=html;
+ document.getElementById('mobileNav').innerHTML=
+ menu.map(m=>`<button data-page="${m[0]}" onclick="navigate('${m[0]}')"><span>${m[1]}</span>${m[2]}</button>`).join('');
+}
+function esc(s){
+ return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+function projectName(id){
+ return data.projects.find(x=>x.id===id)?.name||'Bez přiřazené stavby';
+}
+function row(title,desc,tag,actions=''){
+ return `<div class="item"><div class="item-main"><strong>${esc(title)}</strong><small>${esc(desc)}</small></div>${tag?`<span class="tag">${esc(tag)}</span>`:''}${actions}</div>`;
+}
+function empty(text){return `<div class="empty">${text}</div>`}
+function render(){
+ document.getElementById('sProjects').textContent=data.projects.length;
+ document.getElementById('sWorkers').textContent=data.workers.length;
+ document.getElementById('sTasks').textContent=data.tasks.filter(x=>!x.done).length;
+ document.getElementById('sMachines').textContent=data.machines.length;
+ document.getElementById('rTasks').textContent=data.tasks.length;
+ document.getElementById('rDone').textContent=data.tasks.filter(x=>x.done).length;
+ document.getElementById('rMaterials').textContent=data.materials.length;
+ document.getElementById('rMachines').textContent=data.machines.length;
 
-function nav(view){
- document.querySelectorAll('.view').forEach(v=>{
-  v.classList.toggle('active',v.id==='view-'+view);
- });
- document.querySelectorAll('[data-view]').forEach(b=>{
-  b.classList.toggle('active',b.dataset.view===view);
- });
+ document.getElementById('projectList').innerHTML=data.projects.map(p=>
+ row(p.name,p.type+' · '+(p.location||'Místo neurčeno'),p.status,
+ `<button class="btn small secondary" onclick="editRecord('project','${p.id}')">Upravit</button>
+ <button class="btn small danger" onclick="removeRecord('projects','${p.id}')">×</button>`)).join('')||empty('Zatím nejsou vytvořené žádné zakázky.');
 
- const titles={
-  home:'ŘÍDICÍ CENTRUM',
-  calendar:'KALENDÁŘ PRACÍ',
-  projects:'STAVBY A PROJEKTY',
-  workers:'PRACOVNÍCI',
-  tasks:'ÚKOLY A POŽADAVKY',
-  materials:'MATERIÁL A SKLAD'
+ const filter=document.getElementById('taskFilter')?.value||'all';
+ const tasks=data.tasks.filter(t=>filter==='all'||(filter==='done'?t.done:!t.done));
+ document.getElementById('taskList').innerHTML=tasks.map(t=>
+ `<div class="item">
+ <input class="check" type="checkbox" ${t.done?'checked':''} onchange="toggleTask('${t.id}',this.checked)">
+ <div class="item-main"><strong>${esc(t.name)}</strong>
+ <small>${esc(projectName(t.project))} · ${esc(t.date||'Bez termínu')} · ${esc(t.assignee||'Bez pracovníka')}</small></div>
+ <span class="tag ${t.done?'green':'orange'}">${t.done?'Hotovo':'Čeká'}</span>
+ <button class="btn small secondary" onclick="editRecord('task','${t.id}')">Upravit</button>
+ <button class="btn small danger" onclick="removeRecord('tasks','${t.id}')">×</button>
+ </div>`).join('')||empty('Žádné úkoly.');
+
+ document.getElementById('workerList').innerHTML=data.workers.map(w=>
+ row(w.name,w.role+' · '+(w.phone||'Bez telefonu'),'Pracovník',
+ `<button class="btn small secondary" onclick="editRecord('worker','${w.id}')">Upravit</button>
+ <button class="btn small danger" onclick="removeRecord('workers','${w.id}')">×</button>`)).join('')||empty('Zatím nejsou evidováni zaměstnanci.');
+
+ document.getElementById('machineList').innerHTML=data.machines.map(m=>
+ row(m.name,m.type+' · '+(m.note||''),m.status,
+ `<button class="btn small secondary" onclick="editRecord('machine','${m.id}')">Upravit</button>
+ <button class="btn small danger" onclick="removeRecord('machines','${m.id}')">×</button>`)).join('')||empty('Zatím nejsou evidované stroje.');
+
+ document.getElementById('materialList').innerHTML=data.materials.map(m=>
+ `<div class="item"><div class="item-main"><strong>${esc(m.name)}</strong>
+ <small>${esc(projectName(m.project))} · ${esc(m.unit)}</small></div>
+ <div class="qty"><button onclick="changeQty('${m.id}',-1)">−</button>
+ <strong>${m.qty}</strong><button onclick="changeQty('${m.id}',1)">+</button></div>
+ <button class="btn small secondary" onclick="editRecord('material','${m.id}')">Upravit</button>
+ <button class="btn small danger" onclick="removeRecord('materials','${m.id}')">×</button>
+ </div>`).join('')||empty('Zatím není evidován žádný materiál.');
+
+ document.getElementById('dashProjects').innerHTML=data.projects.slice(0,4).map(p=>
+ row(p.name,p.type+' · '+p.location,p.status)).join('')||empty('Přidej první zakázku.');
+ document.getElementById('dashTasks').innerHTML=data.tasks.filter(t=>!t.done).slice(0,4).map(t=>
+ row(t.name,projectName(t.project),t.date||'Bez termínu')).join('')||empty('Žádné otevřené úkoly.');
+ document.getElementById('planningList').innerHTML=data.tasks.slice().sort((a,b)=>(a.date||'').localeCompare(b.date||'')).map(t=>
+ row(t.date||'Bez termínu',t.name+' · '+projectName(t.project),t.done?'Hotovo':'Naplánováno')).join('')||empty('Plán práce je zatím prázdný.');
+}
+function fieldsFor(type){
+ const projectOptions=data.projects.map(p=>`<option value="${p.id}">${esc(p.name)}</option>`).join('');
+ const commonProject=`<div class="field"><label>Stavba</label><select name="project"><option value="">Bez přiřazení</option>${projectOptions}</select></div>`;
+ const forms={
+ project:`<div class="field"><label>Název zakázky</label><input name="name" required placeholder="Např. Kanalizace – obec"></div>
+ <div class="form-grid"><div class="field"><label>Typ prací</label><select name="type"><option>Výkopy</option><option>Kanalizace</option><option>Vodovod</option><option>Plyn</option><option>Komunikace</option><option>Zámková dlažba</option><option>Obrubníky</option><option>Jiné</option></select></div>
+ <div class="field"><label>Stav zakázky</label><select name="status"><option>Aktivní</option><option>Příprava</option><option>Dokončeno</option><option>Pozastaveno</option></select></div></div>
+ <div class="field"><label>Místo stavby</label><input name="location" placeholder="Obec / adresa"></div>
+ <div class="field"><label>Poznámka</label><textarea name="note"></textarea></div>`,
+ task:`<div class="field"><label>Název úkolu</label><input name="name" required placeholder="Např. Výkop kanalizace"></div>
+ ${commonProject}<div class="form-grid"><div class="field"><label>Termín</label><input type="date" name="date"></div>
+ <div class="field"><label>Pracovník / skupina</label><input name="assignee" placeholder="Jméno nebo tým"></div></div>
+ <div class="field"><label>Popis práce</label><textarea name="note"></textarea></div>`,
+ worker:`<div class="field"><label>Jméno a příjmení</label><input name="name" required></div>
+ <div class="form-grid"><div class="field"><label>Pozice</label><select name="role"><option>Pracovník</option><option>Strojník</option><option>Vedoucí stavby</option><option>Dispečer</option><option>Skladník</option><option>Majitel</option></select></div>
+ <div class="field"><label>Telefon</label><input name="phone" type="tel"></div></div>`,
+ machine:`<div class="field"><label>Název stroje</label><input name="name" required placeholder="Např. CAT 305"></div>
+ <div class="form-grid"><div class="field"><label>Typ</label><select name="type"><option>Minibagr</option><option>Pásový bagr</option><option>Kolový bagr</option><option>Nakladač</option><option>Nákladní automobil</option><option>Válec</option><option>Jiné</option></select></div>
+ <div class="field"><label>Stav</label><select name="status"><option>Volný</option><option>Na stavbě</option><option>Servis</option></select></div></div>
+ <div class="field"><label>Poznámka</label><input name="note"></div>`,
+ material:`<div class="field"><label>Název materiálu</label><input name="name" required placeholder="Např. KG potrubí DN 160"></div>
+ ${commonProject}<div class="form-grid"><div class="field"><label>Množství</label><input type="number" name="qty" min="0" step="any" required value="0"></div>
+ <div class="field"><label>Jednotka</label><select name="unit"><option>ks</option><option>m</option><option>m²</option><option>m³</option><option>t</option><option>kg</option><option>paleta</option><option>balení</option></select></div></div>`
  };
-
- $('pageTitle').textContent=titles[view]||'DAICH';
+ return forms[type];
 }
-
-document.querySelectorAll('[data-view]').forEach(b=>{
- b.addEventListener('click',()=>nav(b.dataset.view));
-});
-
-function field(name,label,type='text',opts={}){
- return {name,label,type,...opts};
+function openForm(type){
+ editing=null;
+ document.getElementById('recordForm').reset();
+ document.getElementById('modalTitle').textContent='Nový záznam';
+ document.getElementById('formFields').innerHTML=fieldsFor(type);
+ document.getElementById('recordForm').dataset.type=type;
+ document.getElementById('modal').classList.add('open');
 }
-
-const schemas={
- project:{
-  title:'PŘIDAT STAVBU',
-  fields:[
-   field('name','NÁZEV STAVBY','text',{required:true}),
-   field('address','ADRESA / MÍSTO'),
-   field('description','POPIS','textarea',{full:true})
-  ]
- },
- worker:{
-  title:'PŘIDAT PRACOVNÍKA',
-  fields:[
-   field('name','JMÉNO A PŘÍJMENÍ','text',{required:true}),
-   field('phone','TELEFON','tel'),
-   field('note','POZNÁMKA','textarea',{full:true})
-  ]
- },
- task:{
-  title:'PŘIDAT ÚKOL',
-  fields:[
-   field('name','NÁZEV ÚKOLU','text',{required:true}),
-   field('date','TERMÍN','date',{value:today()}),
-   field('details','DETAIL / POZNÁMKA','textarea',{full:true})
-  ]
- },
- material:{
-  title:'PŘIDAT MATERIÁL',
-  fields:[
-   field('name','NÁZEV MATERIÁLU','text',{required:true}),
-   field('quantity','POČÁTEČNÍ MNOŽSTVÍ','number',{
-    required:true,value:'0',min:'0',step:'any'
-   }),
-   field('unit','JEDNOTKA','select',{
-    options:['ks','m','m²','m³','kg','t','balení']
-   }),
-   field('location','UMÍSTĚNÍ / SKLAD'),
-   field('note','POZNÁMKA','textarea',{full:true})
-  ]
- },
- plan:{
-  title:'NAPLÁNOVAT PRÁCI',
-  fields:[
-   field('date','DATUM','date',{value:today()}),
-   field('title','CO SE BUDE DĚLAT','text',{required:true}),
-   field('projectId','STAVBA','select',{dynamic:'projects'}),
-   field('workerIds','PRACOVNÍCI','text',{
-    placeholder:'Jména oddělená čárkou'
-   }),
-   field('time','ČAS','text',{placeholder:'např. 7:00–15:30'}),
-   field('details','CO JE POTŘEBA / POZNÁMKA','textarea',{full:true})
-  ]
- }
-};
-
-function openModal(type,id=null){
- currentType=type;
- editingId=id;
-
- const schema=schemas[type];
- if(!schema)return;
-
- const bucket=type==='plan'?'plans':type+'s';
- const existing=id?data[bucket].find(x=>x.id===id):null;
-
- $('modalTitle').textContent=
-  (existing?'UPRAVIT: ':'')+schema.title;
-
- $('formFields').innerHTML=schema.fields.map(f=>{
-  let value=existing&&existing[f.name]!==undefined
-   ?existing[f.name]:(f.value||'');
-
-  if(f.dynamic==='projects'){
-   return `
-    <div class="field">
-     <label>${f.label}</label>
-     <select name="${f.name}">
-      <option value="">Bez přiřazení</option>
-      ${data.projects.map(p=>`
-       <option value="${esc(p.id)}" ${value===p.id?'selected':''}>
-        ${esc(p.name)}
-       </option>
-      `).join('')}
-     </select>
-    </div>`;
-  }
-
-  if(f.type==='select'){
-   return `
-    <div class="field">
-     <label>${f.label}</label>
-     <select name="${f.name}">
-      ${f.options.map(o=>`
-       <option ${value===o?'selected':''}>${esc(o)}</option>
-      `).join('')}
-     </select>
-    </div>`;
-  }
-
-  const common=`
-   name="${f.name}"
-   ${f.required?'required':''}
-   placeholder="${esc(f.placeholder||'')}"
-  `;
-
-  if(f.type==='textarea'){
-   return `
-    <div class="field ${f.full?'full':''}">
-     <label>${f.label}</label>
-     <textarea ${common}>${esc(value)}</textarea>
-    </div>`;
-  }
-
-  return `
-   <div class="field ${f.full?'full':''}">
-    <label>${f.label}</label>
-    <input type="${f.type||'text'}" ${common}
-     value="${esc(value)}"
-     ${f.min!==undefined?`min="${f.min}"`:''}
-     ${f.step?`step="${f.step}"`:''}>
-   </div>`;
- }).join('');
-
- $('modalBackdrop').classList.add('open');
+function editRecord(type,id){
+ const bucket={project:'projects',task:'tasks',worker:'workers',machine:'machines',material:'materials'}[type];
+ const item=data[bucket].find(x=>x.id===id);if(!item)return;
+ editing={type,id};
+ document.getElementById('modalTitle').textContent='Upravit záznam';
+ document.getElementById('formFields').innerHTML=fieldsFor(type);
+ const form=document.getElementById('recordForm');
+ form.dataset.type=type;
+ Object.entries(item).forEach(([key,value])=>{
+ const input=form.elements.namedItem(key);
+ if(input)input.value=value??'';
+ });
+ document.getElementById('modal').classList.add('open');
 }
-
-function closeModal(){
- $('modalBackdrop').classList.remove('open');
- $('recordForm').reset();
- editingId=null;
-}
-
-$('closeModal').onclick=closeModal;
-$('cancelModal').onclick=closeModal;
-
-$('modalBackdrop').addEventListener('click',e=>{
- if(e.target===$('modalBackdrop'))closeModal();
-});
-
-document.querySelectorAll('[data-add]').forEach(b=>{
- b.addEventListener('click',()=>openModal(b.dataset.add));
-});
-
-$('quickAdd').onclick=()=>{
- const active=document.querySelector('.view.active');
- const view=active?.id.replace('view-','');
- const type={
-  home:'plan',
-  calendar:'plan',
-  projects:'project',
-  workers:'worker',
-  tasks:'task',
-  materials:'material'
- }[view]||'plan';
-
- openModal(type);
-};
-
-$('recordForm').addEventListener('submit',e=>{
+function closeForm(){document.getElementById('modal').classList.remove('open')}
+function saveRecord(e){
  e.preventDefault();
-
- const obj=Object.fromEntries(new FormData(e.currentTarget).entries());
- const bucket=currentType==='plan'?'plans':currentType+'s';
-
- if(currentType==='material'){
-  obj.quantity=Math.max(0,Number(obj.quantity)||0);
- }
-
- if(currentType==='plan'){
-  obj.workerIds=(obj.workerIds||'')
-   .split(',')
-   .map(s=>s.trim())
-   .filter(Boolean);
- }
-
- if(editingId){
-  const i=data[bucket].findIndex(x=>x.id===editingId);
-  if(i>=0)data[bucket][i]={...data[bucket][i],...obj};
-
-  log('Upraven záznam: '+(obj.name||obj.title||'plán'));
- }else{
-  obj.id=uid();
-
-  if(currentType==='task')obj.done=false;
-
-  data[bucket].push(obj);
-  log('Přidán záznam: '+(obj.name||obj.title||'plán'));
- }
-
- save();
- closeModal();
-});
-
-function edit(type,id){
- openModal(type,id);
+ const form=e.target,type=form.dataset.type;
+ const bucket={project:'projects',task:'tasks',worker:'workers',machine:'machines',material:'materials'}[type];
+ const obj=Object.fromEntries(new FormData(form).entries());
+ if(type==='material')obj.qty=Math.max(0,Number(obj.qty)||0);
+ obj.id=editing?.id||('d'+Date.now()+Math.random().toString(16).slice(2,7));
+ if(type==='task'&&!editing)obj.done=false;
+ if(editing)data[bucket]=data[bucket].map(x=>x.id===editing.id?{...x,...obj}:x);
+ else data[bucket].push(obj);
+ closeForm();persist();
 }
-
-function remove(type,id){
+function removeRecord(bucket,id){
  if(!confirm('Opravdu chceš tento záznam odstranit?'))return;
-
- const bucket=type==='plan'?'plans':type+'s';
-
- data[bucket]=data[bucket].filter(x=>x.id!==id);
-
- log('Odstraněn záznam');
- save();
+ data[bucket]=data[bucket].filter(x=>x.id!==id);persist();
 }
-  function render(){
-
- $('statProjects').textContent=data.projects.length;
- $('statWorkers').textContent=data.workers.length;
- $('statTasks').textContent=data.tasks.filter(t=>!t.done).length;
- $('statMaterials').textContent=data.materials.length;
-
- $('todayPlans').textContent=
-  data.plans.filter(p=>p.date===today()).length;
-
- $('doneTasks').textContent=
-  data.tasks.filter(t=>t.done).length;
-
- $('materialCount').textContent=data.materials.length;
-
- // STAVBY
- $('projectsBody').innerHTML=data.projects.length
- ?data.projects.map(p=>`
-  <tr>
-   <td><strong>${esc(p.name)}</strong></td>
-   <td>${esc(p.address||'—')}</td>
-   <td class="muted">${esc(p.description||'—')}</td>
-   <td>
-    <div class="actions">
-     <button class="icon-btn" data-edit="project" data-id="${p.id}">✎</button>
-     <button class="icon-btn" data-remove="project" data-id="${p.id}">×</button>
-    </div>
-   </td>
-  </tr>
- `).join('')
- :`<tr><td colspan="4"><div class="empty">Zatím nejsou přidané žádné stavby.</div></td></tr>`;
-
- // PRACOVNÍCI
- $('workersBody').innerHTML=data.workers.length
- ?data.workers.map(w=>`
-  <tr>
-   <td><strong>${esc(w.name)}</strong></td>
-   <td>${esc(w.phone||'—')}</td>
-   <td class="muted">${esc(w.note||'—')}</td>
-   <td>
-    <div class="actions">
-     <button class="icon-btn" data-edit="worker" data-id="${w.id}">✎</button>
-     <button class="icon-btn" data-remove="worker" data-id="${w.id}">×</button>
-    </div>
-   </td>
-  </tr>
- `).join('')
- :`<tr><td colspan="4"><div class="empty">Zatím nejsou přidaní žádní pracovníci.</div></td></tr>`;
-
- // ÚKOLY
- $('tasksBody').innerHTML=data.tasks.length
- ?data.tasks.map(t=>`
-  <tr>
-   <td><strong>${esc(t.name)}</strong></td>
-   <td>${esc(t.date||'—')}</td>
-   <td class="muted">${esc(t.details||'—')}</td>
-   <td>
-    <span class="pill ${t.done?'green':'amber'}">
-     ${t.done?'Hotovo':'Otevřeno'}
-    </span>
-   </td>
-   <td>
-    <div class="actions">
-     <button class="icon-btn" data-toggle="${t.id}">${t.done?'↶':'✓'}</button>
-     <button class="icon-btn" data-edit="task" data-id="${t.id}">✎</button>
-     <button class="icon-btn" data-remove="task" data-id="${t.id}">×</button>
-    </div>
-   </td>
-  </tr>
- `).join('')
- :`<tr><td colspan="5"><div class="empty">Žádné úkoly. Přidej první úkol.</div></td></tr>`;
-
- // MATERIÁL
- $('materialsGrid').innerHTML=data.materials.length
- ?data.materials.map(m=>`
-  <article class="material-card">
-   <div class="material-top">
-    <div>
-     <div class="material-name">${esc(m.name)}</div>
-     <div class="material-meta">
-      ${esc(m.location||'Umístění neuvedeno')}
-      ${m.note?' · '+esc(m.note):''}
-     </div>
-    </div>
-    <div class="actions">
-     <button class="icon-btn" data-edit="material" data-id="${m.id}">✎</button>
-     <button class="icon-btn" data-remove="material" data-id="${m.id}">×</button>
-    </div>
-   </div>
-
-   <div class="quantity-control">
-    <button class="qty-btn" data-qty="-1" data-id="${m.id}">−</button>
-    <div class="qty-value">${Number(m.quantity)||0}</div>
-    <div class="qty-unit">${esc(m.unit||'ks')}</div>
-    <button class="qty-btn" data-qty="1" data-id="${m.id}">＋</button>
-    <span class="qty-hint">STAV SKLADU</span>
-   </div>
-  </article>
- `).join('')
- :`<div class="empty" style="grid-column:1/-1">Sklad je zatím prázdný. Přidej první materiál.</div>`;
-
- // DENNÍ PLÁN
- const date=$('selectedDate').value||today();
- const plans=data.plans.filter(p=>p.date===date);
-
- $('dayLabel').textContent='PLÁN PRO '+date.split('-').reverse().join('.');
- $('planCount').textContent=plans.length+' položek';
-
- $('dayPlans').innerHTML=plans.length
- ?plans.map(p=>{
-  const project=data.projects.find(x=>x.id===p.projectId);
-
-  return `
-   <div class="plan-item">
-    <div style="display:flex;justify-content:space-between;gap:10px">
-     <strong>${esc(p.title)}</strong>
-     <div class="actions">
-      <button class="icon-btn" data-edit="plan" data-id="${p.id}">✎</button>
-      <button class="icon-btn" data-remove="plan" data-id="${p.id}">×</button>
-     </div>
-    </div>
-    <small>${esc(p.time||'Čas neuveden')} · ${esc(project?.name||'Bez přiřazené stavby')}</small>
-    <small>Pracovníci: ${esc((p.workerIds||[]).join(', ')||'Neuvedeni')}</small>
-    ${p.details?`<small>${esc(p.details)}</small>`:''}
-   </div>`;
- }).join('')
- :'<div class="empty">Na tento den zatím není naplánovaná žádná práce.</div>';
-
- // POSLEDNÍ AKTIVITY
- $('activity').innerHTML=data.activity.length
- ?data.activity.map(a=>`
-  <div class="activity-item">
-   <span class="activity-mark"></span>
-   <div>${esc(a.msg)}<small>${esc(a.time)}</small></div>
-  </div>
- `).join('')
- :'<div class="empty">Zatím zde nejsou žádné záznamy.</div>';
+function toggleTask(id,done){
+ const t=data.tasks.find(x=>x.id===id);if(t)t.done=done;persist();
 }
-
-// OVLÁDÁNÍ ZÁZNAMŮ A SKLADU
-document.addEventListener('click',e=>{
-
- const editBtn=e.target.closest('[data-edit]');
- if(editBtn){
-  edit(editBtn.dataset.edit,editBtn.dataset.id);
-  return;
- }
-
- const removeBtn=e.target.closest('[data-remove]');
- if(removeBtn){
-  remove(removeBtn.dataset.remove,removeBtn.dataset.id);
-  return;
- }
-
- // PLUS / MINUS U MATERIÁLU
- const qty=e.target.closest('[data-qty]');
- if(qty){
-  const m=data.materials.find(x=>x.id===qty.dataset.id);
-
-  if(m){
-   const change=Number(qty.dataset.qty);
-
-   m.quantity=Math.max(
-    0,
-    (Number(m.quantity)||0)+change
-   );
-
-   log(
-    (change>0?'Přidáno':'Odebráno')+
-    ' množství: '+m.name
-   );
-
-   save();
-  }
-  return;
- }
-
- // DOKONČENÍ ÚKOLU
- const toggle=e.target.closest('[data-toggle]');
- if(toggle){
-  const t=data.tasks.find(x=>x.id===toggle.dataset.toggle);
-
-  if(t){
-   t.done=!t.done;
-
-   log(
-    (t.done?'Dokončen':'Znovu otevřen')+
-    ' úkol: '+t.name
-   );
-
-   save();
-  }
-  return;
- }
-});
-
-// DATUM V KALENDÁŘI
-$('selectedDate').value=today();
-$('selectedDate').addEventListener('change',render);
-
-// HODINY
-function updateClock(){
- const d=new Date();
-
- $('clock').textContent=
-  d.toLocaleDateString('cs-CZ',{
-   weekday:'short',day:'numeric',month:'short'
-  })+' · '+
-  d.toLocaleTimeString('cs-CZ',{
-   hour:'2-digit',minute:'2-digit'
-  });
+function changeQty(id,delta){
+ const m=data.materials.find(x=>x.id===id);if(!m)return;
+ m.qty=Math.max(0,Number(m.qty)+delta);persist();
 }
-
-updateClock();
-setInterval(updateClock,30000);
-
-// PRVNÍ VYKRESLENÍ
-render();
-
-})();
+function uploadInfo(){
+ const files=document.getElementById('projectFile').files;
+ document.getElementById('fileInfo').textContent=files.length?
+ 'Vybrané soubory: '+Array.from(files).map(f=>f.name).join(', '):
+ 'Nejdříve vyber soubor.';
+}
+buildNav();render();navigate('dashboard');
 </script>
 </body>
 </html>
